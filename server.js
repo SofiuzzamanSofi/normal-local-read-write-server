@@ -26,6 +26,7 @@ const productsFilePath = path.join(__dirname, "./", 'components', 'data', 'produ
 async function run() {
     try {
 
+
         app.get("/", (req, res) => {
             res.status(200).send({
                 success: true,
@@ -33,6 +34,7 @@ async function run() {
             })
         });
 
+        // get all products --- 
         app.get("/products", (req, res) => {
             fs.readFile(productsFilePath, "utf8", (err, data) => {
                 if (err) {
@@ -49,6 +51,7 @@ async function run() {
             })
         });
 
+        // add a product --- 
         app.post('/products', (req, res) => {
             fs.readFile(productsFilePath, 'utf8', (err, data) => {
                 if (err) {
@@ -58,7 +61,12 @@ async function run() {
                         acknowledge: false,
                     })
                 }
+                const _id = Math.round(Math.random() * 100);
                 const newProduct = req.body;
+                newProduct = {
+                    ...newProduct,
+                    _id,
+                }
                 const products = JSON.parse(data)
                 products.push(newProduct);
 
@@ -73,11 +81,48 @@ async function run() {
                     return res.send({
                         success: true,
                         acknowledge: true,
-                        insertedId: Math.round(Math.random() * 100)
+                        insertedId: _id,
                     })
                 })
             })
+        })
 
+
+        app.delete("/product/:id", (req, res) => {
+            fs.readFile(productsFilePath, "utf8", (err, data) => {
+                if (err) {
+                    console.log(err);
+                    return res.status(500).send({
+                        success: false,
+                        acknowledge: false,
+                    });
+                };
+                const id = req.params.id;
+                const products = JSON.parse(data);
+                const index = products.findIndex(p => p._id === id);
+                if (index === -1) {
+                    return res.status(404).send({
+                        success: false,
+                        acknowledge: false,
+                        message: `Product with id ${id} not found`,
+                    });
+                };
+                products.splice(index, 1)
+                fs.writeFile(productsFilePath, JSON.stringify(products), "utf8", (err, data) => {
+                    if (err) {
+                        console.log(err);
+                        return res.status(500).send({
+                            success: false,
+                            acknowledge: false,
+                        });
+                    };
+                    return res.status(200).send({
+                        success: true,
+                        acknowledge: true,
+                        message: `Product id ${id} successfully deleted.`,
+                    })
+                })
+            })
         })
 
     } catch (error) {
