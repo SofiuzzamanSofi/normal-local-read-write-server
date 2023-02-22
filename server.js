@@ -63,12 +63,12 @@ async function run() {
                 }
                 const _id = Math.round(Math.random() * 100);
                 const newProduct = req.body;
-                newProduct = {
+                const newProductWithId = {
                     ...newProduct,
                     _id,
                 }
                 const products = JSON.parse(data)
-                products.push(newProduct);
+                products.push(newProductWithId);
 
                 fs.writeFile(productsFilePath, JSON.stringify(products), "utf8", (err, data) => {
                     if (err) {
@@ -87,8 +87,8 @@ async function run() {
             })
         })
 
-
-        app.delete("/product/:id", (req, res) => {
+        // delete a product by id --- 
+        app.delete("/products/:id", (req, res) => {
             fs.readFile(productsFilePath, "utf8", (err, data) => {
                 if (err) {
                     console.log(err);
@@ -99,7 +99,7 @@ async function run() {
                 };
                 const id = req.params.id;
                 const products = JSON.parse(data);
-                const index = products.findIndex(p => p._id === id);
+                const index = products.findIndex(p => parseInt(p._id) === parseInt(id));
                 if (index === -1) {
                     return res.status(404).send({
                         success: false,
